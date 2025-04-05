@@ -3,9 +3,13 @@ const { Worker } = require('worker_threads');
 const { generateSigner } = require('@metaplex-foundation/umi');
 const { createUmi } = require('@metaplex-foundation/umi-bundle-defaults');
 const os = require('os');
+const cors = require('cors'); // Add this line
 
 const app = express();
-const port = process.env.PORT || 3001; // Render sets PORT, fallback to 3001 locally
+const port = process.env.PORT || 3001;
+
+// Enable CORS for all origins (or specify allowed origins)
+app.use(cors()); // Add this line
 
 app.get('/mint', async (req, res) => {
     const { prefix, endpoint = 'https://api.devnet.solana.com', numWorkers = os.cpus().length } = req.query;
@@ -18,10 +22,9 @@ app.get('/mint', async (req, res) => {
         const mint = await generateVanityMintSigner(prefix, endpoint, parseInt(numWorkers));
         console.log("Generated Mint Public Key:", mint.publicKey.toString());
 
-        // Return the full mint object in a JSON-serializable format
         res.status(200).json({
             publicKey: mint.publicKey.toString(),
-            secretKey: Array.from(mint.secretKey) // Convert Uint8Array to array
+            secretKey: Array.from(mint.secretKey)
         });
     } catch (error) {
         console.error('API Error:', error);
